@@ -1,0 +1,267 @@
+import java.util.*;
+import java.io.*;
+
+class Student {
+    private String id;
+    private String name;
+    private String dob;
+    private String major;
+    private double gpa;
+
+    public Student(String id, String name, String dob, String major, double gpa) {
+        this.id = id;
+        this.name = name;
+        this.dob = dob;
+        this.major = major;
+        this.gpa = gpa;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public String getMajor() {
+        return major;
+    }
+
+    public double getGpa() {
+        return gpa;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public void setGpa(double gpa) {
+        this.gpa = gpa;
+    }
+
+    @Override
+    public String toString() {
+        return "ID: " + id + ", Name: " + name + ", DOB: " + dob + ", Major: " + major + ", GPA: " + gpa;
+    }
+}
+
+class StudentManager {
+    private List<Student> students;
+
+    public StudentManager() {
+        students = new ArrayList<>();
+    }
+
+    public void addStudent(String id, String name, String dob, String major, double gpa) {
+        students.add(new Student(id, name, dob, major, gpa));
+    }
+
+    public boolean removeStudent(String id) {
+        Student studentToRemove = getStudentById(id);
+        if (studentToRemove != null) {
+            students.remove(studentToRemove);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateStudent(String id, String name, String dob, String major, double gpa) {
+        Student student = getStudentById(id);
+        if (student != null) {
+            student.setName(name);
+            student.setDob(dob);
+            student.setMajor(major);
+            student.setGpa(gpa);
+            return true;
+        }
+        return false;
+    }
+
+    public Student getStudentById(String id) {
+        for (Student student : students) {
+            if (student.getId().equals(id)) {
+                return student;
+            }
+        }
+        return null;
+    }
+
+    public List<Student> searchStudents(String searchTerm) {
+        List<Student> result = new ArrayList<>();
+        for (Student student : students) {
+            if (student.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                student.getMajor().toLowerCase().contains(searchTerm.toLowerCase())) {
+                result.add(student);
+            }
+        }
+        return result;
+    }
+
+    public void viewAllStudents() {
+        if (students.isEmpty()) {
+            System.out.println("No students available.");
+        } else {
+            for (Student student : students) {
+                System.out.println(student);
+            }
+        }
+    }
+
+    public void loadFromFile(String filename) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            students = (List<Student>) ois.readObject();
+        } catch (Exception e) {
+            System.out.println("Error loading students from file.");
+        }
+    }
+
+    public void saveToFile(String filename) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(students);
+        } catch (IOException e) {
+            System.out.println("Error saving students to file.");
+        }
+    }
+}
+
+public class StudentManagementSystem {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static StudentManager studentManager = new StudentManager();
+    private static final String FILENAME = "students.dat";
+
+    public static void main(String[] args) {
+        studentManager.loadFromFile(FILENAME);
+
+        while (true) {
+            showMenu();
+            int choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline character
+
+            switch (choice) {
+                case 1:
+                    addStudent();
+                    break;
+                case 2:
+                    removeStudent();
+                    break;
+                case 3:
+                    updateStudent();
+                    break;
+                case 4:
+                    viewAllStudents();
+                    break;
+                case 5:
+                    searchStudents();
+                    break;
+                case 6:
+                    saveAndExit();
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void showMenu() {
+        System.out.println("\nStudent Management System");
+        System.out.println("1. Add Student");
+        System.out.println("2. Remove Student");
+        System.out.println("3. Update Student");
+        System.out.println("4. View All Students");
+        System.out.println("5. Search Students");
+        System.out.println("6. Save and Exit");
+        System.out.print("Enter your choice: ");
+    }
+
+    private static void addStudent() {
+        System.out.print("Enter student ID: ");
+        String id = scanner.nextLine();
+        System.out.print("Enter student name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter student date of birth (yyyy-mm-dd): ");
+        String dob = scanner.nextLine();
+        System.out.print("Enter student major: ");
+        String major = scanner.nextLine();
+        System.out.print("Enter student GPA: ");
+        double gpa = scanner.nextDouble();
+        scanner.nextLine();  // Consume newline character
+
+        studentManager.addStudent(id, name, dob, major, gpa);
+        System.out.println("Student added successfully.");
+    }
+
+    private static void removeStudent() {
+        System.out.print("Enter student ID to remove: ");
+        String id = scanner.nextLine();
+
+        if (studentManager.removeStudent(id)) {
+            System.out.println("Student removed successfully.");
+        } else {
+            System.out.println("Student with ID " + id + " not found.");
+        }
+    }
+
+    private static void updateStudent() {
+        System.out.print("Enter student ID to update: ");
+        String id = scanner.nextLine();
+
+        Student student = studentManager.getStudentById(id);
+        if (student != null) {
+            System.out.print("Enter new name (leave blank for no change): ");
+            String name = scanner.nextLine();
+            if (!name.isEmpty()) student.setName(name);
+
+            System.out.print("Enter new DOB (leave blank for no change): ");
+            String dob = scanner.nextLine();
+            if (!dob.isEmpty()) student.setDob(dob);
+
+            System.out.print("Enter new major (leave blank for no change): ");
+            String major = scanner.nextLine();
+            if (!major.isEmpty()) student.setMajor(major);
+
+            System.out.print("Enter new GPA (enter -1 for no change): ");
+            double gpa = scanner.nextDouble();
+            if (gpa != -1) student.setGpa(gpa);
+
+            System.out.println("Student updated successfully.");
+        } else {
+            System.out.println("Student with ID " + id + " not found.");
+        }
+    }
+
+    private static void viewAllStudents() {
+        studentManager.viewAllStudents();
+    }
+
+    private static void searchStudents() {
+        System.out.print("Enter search term (name or major): ");
+        String searchTerm = scanner.nextLine();
+
+        List<Student> result = studentManager.searchStudents(searchTerm);
+        if (result.isEmpty()) {
+            System.out.println("No students found matching the search term.");
+        } else {
+            for (Student student : result) {
+                System.out.println(student);
+            }
+        }
+    }
+
+    private static void saveAndExit() {
+        studentManager.saveToFile(FILENAME);
+        System.out.println("Students saved. Exiting...");
+    }
+}
